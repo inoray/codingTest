@@ -13,6 +13,7 @@
 // 000001
 // 111111
 // 111111
+
 struct TPoint
 {
     int x;
@@ -24,31 +25,37 @@ struct TPoint
     }
 };
 
-void bfs(std::vector<std::vector<int>> &map, int x, int y)
+int bfs(std::vector<std::vector<int>> &map, int x, int y)
 {
-    int step = 1;
+    int h = map.size();
+    int w = map[0].size();
+
     std::queue<TPoint> q;
     q.push(TPoint(x, y));
 
+    const int dx[4] = {1, 0, -1, 0};
+    const int dy[4] = {0, 1, 0, -1};
+
     while (!q.empty())
     {
-        TPoint pt = q.front();
+        const TPoint& pt = q.front();
         q.pop();
 
-        if (map[y][x] == 1)
+        for (int i = 0; i < 4; ++i)
         {
-            map[y][x] = step++;
-
-            if (x < map[y].size() - 1 && map[x + 1][y] == 1)
-                q.push(TPoint(x + 1, y));
-            if (y < map.size() - 1 && map[x][y + 1] == 1)
-                q.push(TPoint(x, y + 1));
-            if (x > 0 && map[x - 1][y] == 1)
-                q.push(TPoint(x - 1, y));
-            if (y > 0 && map[x][y - 1] == 1)
-                q.push(TPoint(x, y - 1));
+            TPoint next(pt.x + dx[i], pt.y + dy[i]);
+            if (next.x < 0 || next.x >= w || next.y < 0 || next.y >= h)
+                continue;
+            if (next.x == 0 && next.y == 0)
+                continue;
+            if (map[next.y][next.x] == 1)
+            {
+                map[next.y][next.x] = map[pt.y][pt.x] + 1;
+                q.push(next);
+            }
         }
     }
+    return map.back().back();
 }
 
 int main()
@@ -71,10 +78,9 @@ int main()
             std::cout << map[i][j];
         std::cout << std::endl;
     }
-    bfs(map, 0, 0);
-    int result = map.back().back();
-    std::cout << result;
-    std::cout << std::endl;
+
+    std::cout << bfs(map, 0, 0) << std::endl;
+
     for (int i = 0; i < static_cast<int>(map.size()); ++i)
     {
         for (int j = 0; j < static_cast<int>(map[i].size()); ++j)
