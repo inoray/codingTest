@@ -29,54 +29,44 @@
 
 using namespace std;
 
-struct TPosition
+void dfs (const vector<vector<int>>& computers, int i, int label, vector<int>& visited)
 {
-    int i;
-    int j;
-    TPosition (int _i, int _j)
+    visited[i] = label;
+    for (int j = 0; j < computers[i].size(); ++j)
     {
-        i = _i;
-        j = _j;
+        if (i != j
+            && computers[i][j] == 1
+            && visited[j] == 0)
+            dfs(computers, j, label, visited);
     }
-};
-
-void dfs (vector<vector<int>>& computers, int i, int j, int label)
-{
-    if (i < 0 || i == computers.size())
-        return;
-    if (j < 0 || j == computers[i].size())
-        return;
-    if (computers[i][j] != 1)
-        return;
-    computers[i][j] = label;
-    dfs (computers, i, j + 1, label);
-    dfs (computers, i + 1, j, label);
-    dfs (computers, i, j - 1, label);
-    dfs (computers, i - 1, j, label);
 }
 
 int solution(int n, vector<vector<int>> computers) {
 
-    int label = 2;
+    vector<int> visited(n);
+    int label = 1;
     for (int i = 0; i < n; ++i)
     {
-        for (int j = 0; j < n; ++j)
+        if (visited[i] == 0)
         {
-            if (computers[i][j] == 1)
-            {
-                dfs (computers, i, j, label);
-                label++;
-            }
+            dfs (computers, i, label, visited);
+            label++;
         }
     }
 
-    return label - 2;
+    return label - 1;
 }
 
 int main()
 {
-    int n = 3;
-    vector<vector<int>> computers = {{1,1,0}, {1,1,1}, {0,1,1}};
+    int n = 6;
+    vector<vector<int>> computers = {
+        {1,1,0,0,1,0},
+        {1,1,0,0,0,0},
+        {0,0,1,1,0,1},
+        {0,0,1,1,0,1},
+        {1,0,0,0,1,0},
+        {0,0,0,1,0,1}};
     cout << solution(n, computers);
     return 0;
 }
