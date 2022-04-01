@@ -35,7 +35,10 @@
 using namespace std;
 typedef map<string, vector<pair<string, int>>> TMapTickets;
 
-bool comp (pair<string, int> a, pair)
+bool comp (pair<string, int> a, pair<string, int> b)
+{
+    return a.first < b.first;
+}
 
 void createMap (
     const vector<vector<string>>& tickets
@@ -45,13 +48,13 @@ void createMap (
     {
         TMapTickets::iterator it = mapTickets.find(tickets[i][0]);
         if (it == mapTickets.end())
-            mapTickets[tickets[i][0]] = vector<pair<string, int>>({pair(tickets[i][1], 0)});
+            mapTickets[tickets[i][0]] = vector<pair<string, int>>({pair(tickets[i][1], 1)});
         else
-            it->second.push_back (pair<string, int>(tickets[i][1], 0));
+            it->second.push_back (pair<string, int>(tickets[i][1], 1));
     }
     //sort
     for (TMapTickets::iterator it = mapTickets.begin(); it != mapTickets.end(); ++it)
-        sort(it->second.begin(), it->second.end(), _greater());
+        sort(it->second.begin(), it->second.end(), comp);
 }
 
 bool dfs (TMapTickets& mapTickets, const string& from, vector<string>& path, int maxPathSize)
@@ -59,31 +62,29 @@ bool dfs (TMapTickets& mapTickets, const string& from, vector<string>& path, int
     if (path.size() == maxPathSize)
         return true;
 
-    cout << from << " ";
     TMapTickets::iterator itTo = mapTickets.find(from);
     if (itTo == mapTickets.end())
         return false;
 
-    vector<string> tmpTo = itTo->second;
     bool bGood = false;
-    for (int i = itTo->second.size() - 1; i >= 0; --i)
+    for (int i = 0; i < itTo->second.size(); ++i)
     {
-        const string& to = itTo->second[i];
-        vector<string> curPath = path;
+        int& cntTicket = itTo->second[i].second;
+        if (cntTicket == 0)
+            continue;
 
-        curPath.push_back(to);
-        itTo->second.erase(itTo->second.begin() + i);
+        const string& to = itTo->second[i].first;
+        path.push_back(to);
+        cntTicket--;
 
-        bGood = dfs (mapTickets, to, curPath, maxPathSize);
+        bGood = dfs (mapTickets, to, path, maxPathSize);
         if (bGood)
-        {
-            path = curPath;
             break;
-        }
-    }
 
-    itTo->second = tmpTo;
-    cout << endl;
+        // 탐색 실패시 추가된 경로정보를 다시 제거
+        path.pop_back();
+        cntTicket++;   //실패했으면 티켓 개수 원복
+    }
 
     return bGood;
 }
@@ -162,6 +163,7 @@ int main()
     vector<string> path = solution(tickets);
 
     cout << endl;
+    cout << "result" << endl;
     for (int i = 0; i < path.size(); ++i)
         cout << path[i] << " ";
 
