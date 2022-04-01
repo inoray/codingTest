@@ -33,34 +33,9 @@
 #include <algorithm>
 
 using namespace std;
-typedef map<string, vector<string>> TMapTickets;
+typedef map<string, vector<pair<string, int>>> TMapTickets;
 
-bool dfs (TMapTickets& mapTickets, const string& from, vector<int>& visited, vector<string>& path)
-{
-    //if (path.size() + 1 == tickets.size())
-    //    return true;
-
-    TMapTickets::iterator itFound = mapTickets.find(from);
-    if (itFound == mapTickets.end())
-    {
-        return false; // todo
-    }
-
-    for (int i = 0; i < itFound->second.size(); ++i)
-    {
-        vector<int> curVisited = visited;
-        vector<string> curPath = path;
-        curVisited[nextIdxs[i]] = 1;
-        curPath.push_back(tickets[nextIdxs[i]][1]);
-        bool bGood = dfs (tickets, tickets[nextIdxs[i]][1], curVisited, curPath);
-        if (bGood)
-        {
-            path = curPath;
-            break;
-        }
-    }
-    return true;
-}
+bool comp (pair<string, int> a, pair)
 
 void createMap (
     const vector<vector<string>>& tickets
@@ -69,23 +44,58 @@ void createMap (
     for (int i = 0; i < tickets.size(); ++i)
     {
         TMapTickets::iterator it = mapTickets.find(tickets[i][0]);
-        if (it != mapTickets.end())
-            it->second.push_back (tickets[i][1]);
+        if (it == mapTickets.end())
+            mapTickets[tickets[i][0]] = vector<pair<string, int>>({pair(tickets[i][1], 0)});
         else
-            mapTickets[tickets[i][0]] = vector<string>({tickets[i][1]});
+            it->second.push_back (pair<string, int>(tickets[i][1], 0));
     }
     //sort
     for (TMapTickets::iterator it = mapTickets.begin(); it != mapTickets.end(); ++it)
-        sort(it->second.begin(), it->second.end());
+        sort(it->second.begin(), it->second.end(), _greater());
+}
+
+bool dfs (TMapTickets& mapTickets, const string& from, vector<string>& path, int maxPathSize)
+{
+    if (path.size() == maxPathSize)
+        return true;
+
+    cout << from << " ";
+    TMapTickets::iterator itTo = mapTickets.find(from);
+    if (itTo == mapTickets.end())
+        return false;
+
+    vector<string> tmpTo = itTo->second;
+    bool bGood = false;
+    for (int i = itTo->second.size() - 1; i >= 0; --i)
+    {
+        const string& to = itTo->second[i];
+        vector<string> curPath = path;
+
+        curPath.push_back(to);
+        itTo->second.erase(itTo->second.begin() + i);
+
+        bGood = dfs (mapTickets, to, curPath, maxPathSize);
+        if (bGood)
+        {
+            path = curPath;
+            break;
+        }
+    }
+
+    itTo->second = tmpTo;
+    cout << endl;
+
+    return bGood;
 }
 
 vector<string> solution(vector<vector<string>> tickets) {
     TMapTickets mapTickets;
     createMap (tickets, mapTickets);
 
-    vector<int> visited(tickets.size());
     vector<string> path;
-    dfs (mapTickets, "ICN", visited, path);
+    path.push_back("ICN");
+    dfs (mapTickets, "ICN", path, tickets.size() + 1);
+
     return path;
 }
 /*
@@ -138,15 +148,22 @@ vector<string> solution(vector<vector<string>> tickets) {
 int main()
 {
     vector<vector<string>> tickets = {
-        {"ICN", "SFO"},
-        {"ICN", "ATL"},
-        {"SFO", "ATL"},
-        {"ATL", "ICN"},
-        {"ATL", "SFO"}};
+        {"ICN", "BOO"},
+        {"ICN", "COO"},
+        {"COO", "DOO"},
+        {"DOO", "COO"},
+        {"BOO", "DOO"},
+        {"DOO", "BOO"},
+        {"BOO", "ICN"},
+        {"COO", "BOO"},
+    };
+    // ans : ["ICN", "BOO", "DOO", "BOO", "ICN", "COO", "DOO", "COO", "BOO"]
 
     vector<string> path = solution(tickets);
+
+    cout << endl;
     for (int i = 0; i < path.size(); ++i)
-        cout << path[i] << endl;
+        cout << path[i] << " ";
 
     return 0;
 }
