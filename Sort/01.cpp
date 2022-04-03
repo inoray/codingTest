@@ -38,6 +38,8 @@ string solution(vector<int> numbers) {
     string answer = "";
     for (int i = strNum.size() - 1; i >= 0; --i)
         answer += strNum[i];
+    if (answer[0] == '0')
+        answer = "0";
     return answer;
 }
 
